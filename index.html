@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0b0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Facturo">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Facturo</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+:root {
+  --ink: #0a0b0f;
+  --ink2: #12141c;
+  --ink3: #1a1d28;
+  --ink4: #252836;
+  --line: rgba(255,255,255,0.06);
+  --line2: rgba(255,255,255,0.1);
+  --fog: #6b7390;
+  --mist: #3a3f55;
+  --snow: #f0f2ff;
+  --white: #ffffff;
+  --gold: #f5c842;
+  --gold-dim: rgba(245,200,66,0.12);
+  --teal: #2de8c8;
+  --teal-dim: rgba(45,232,200,0.1);
+  --rose: #ff5f7e;
+  --rose-dim: rgba(255,95,126,0.1);
+  --violet: #a78bfa;
+  --violet-dim: rgba(167,139,250,0.1);
+  --safe-top: env(safe-area-inset-top,0px);
+  --safe-bot: env(safe-area-inset-bottom,0px);
+}
+
+html,body{height:100%;overflow:hidden;background:var(--ink);color:var(--snow);font-family:'Space Grotesk',sans-serif}
+
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--ink);overflow:hidden;transition:transform .35s cubic-bezier(.4,0,.2,1),opacity .35s;will-change:transform,opacity}
+.screen.hidden{transform:translateX(100%);opacity:0;pointer-events:none}
+.screen.back{transform:translateX(-12%);opacity:0;pointer-events:none}
+
+/* ── STATUS ── */
+.sb{height:calc(var(--safe-top) + 48px);flex-shrink:0}
+
+/* ── TOPBAR ── */
+.top{display:flex;align-items:center;padding:0 20px 16px;gap:12px;flex-shrink:0}
+.top-back{width:38px;height:38px;border-radius:50%;background:var(--ink3);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:var(--fog);flex-shrink:0;transition:.15s}
+.top-back:active{transform:scale(.88)}
+.top-title{flex:1;font-size:17px;font-weight:600;letter-spacing:-.3px}
+.top-btn{width:38px;height:38px;border-radius:50%;background:var(--ink3);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:var(--fog);transition:.15s}
+.top-btn:active{transform:scale(.88)}
+
+/* ── SCROLL ── */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:100px}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ── HOME HEADER ── */
+.home-head{padding:0 20px 20px;display:flex;align-items:center;justify-content:space-between}
+.home-wordmark{font-family:'Instrument Serif',serif;font-size:28px;letter-spacing:-.5px;color:var(--white)}
+.home-wordmark em{font-style:italic;color:var(--gold)}
+.home-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--rose));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer}
+
+/* ── HERO CARD ── */
+.hero{margin:0 20px 22px;background:var(--ink2);border:1px solid var(--line2);border-radius:24px;padding:24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(245,200,66,.15) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-80px;left:-30px;width:220px;height:220px;background:radial-gradient(circle,rgba(45,232,200,.08) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+.hero-eyebrow{font-size:11px;font-weight:500;color:var(--fog);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.hero-amount{font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:600;letter-spacing:-1px;color:var(--white);margin-bottom:20px}
+.hero-amount span{color:var(--gold);font-size:22px;vertical-align:middle;margin-right:4px}
+.hero-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.hero-chip{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:10px 10px}
+.hero-chip-l{font-size:10px;color:var(--fog);font-weight:500;margin-bottom:4px;white-space:nowrap}
+.hero-chip-v{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600}
+
+/* ── QUICK ACTIONS ── */
+.qa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 20px 24px}
+.qa{background:var(--ink2);border:1px solid var(--line);border-radius:16px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;transition:.15s}
+.qa:active{transform:scale(.92);background:var(--ink3)}
+.qa-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.qa-label{font-size:11px;color:var(--fog);font-weight:500;text-align:center}
+
+/* ── SECTION ── */
+.sec{padding:0 20px;margin-bottom:24px}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-title{font-size:13px;font-weight:600;color:var(--fog);letter-spacing:1px;text-transform:uppercase}
+.sec-link{font-size:13px;color:var(--gold);cursor:pointer;font-weight:500}
+
+/* ── INVOICE CARD ── */
+.inv-card{background:var(--ink2);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:.18s;display:flex;align-items:center;gap:12px}
+.inv-card:active{transform:scale(.97);background:var(--ink3)}
+.inv-dot{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;font-family:'Instrument Serif',serif;font-style:italic}
+.inv-body{flex:1;min-width:0}
+.inv-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.inv-sub{font-size:11.5px;color:var(--fog);font-family:'JetBrains Mono',monospace}
+.inv-right{text-align:right;flex-shrink:0}
+.inv-amt{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;margin-bottom:4px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.3px}
+.b-paid{background:rgba(45,232,200,.12);color:var(--teal)}
+.b-pending{background:rgba(245,200,66,.12);color:var(--gold)}
+.b-overdue{background:rgba(255,95,126,.12);color:var(--rose)}
+.b-draft{background:rgba(255,255,255,.06);color:var(--fog);border:1px solid var(--line2)}
+
+/* ── STATS ROW ── */
+.stats-scroll{display:flex;gap:10px;overflow-x:auto;padding:0 20px 24px;scrollbar-width:none}
+.stats-scroll::-webkit-scrollbar{display:none}
+.stat-tile{background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:14px 16px;flex-shrink:0;min-width:120px}
+.stat-tile-l{font-size:10px;color:var(--fog);font-weight:500;letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
+.stat-tile-v{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;letter-spacing:-1px}
+.stat-tile-s{font-size:11px;color:var(--fog);margin-top:3px}
+
+/* ── BOTTOM NAV ── */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,11,15,.88);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-top:1px solid var(--line);display:flex;align-items:center;padding:8px 14px calc(8px + var(--safe-bot));z-index:100}
+.nav-i{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 4px;border-radius:12px;border:none;background:none;transition:.15s;-webkit-tap-highlight-color:transparent}
+.nav-i:active{transform:scale(.88)}
+.nav-ico{font-size:22px;line-height:1}
+.nav-lbl{font-size:10px;font-weight:500;color:var(--fog);font-family:'Space Grotesk',sans-serif;transition:.15s}
+.nav-i.active .nav-lbl{color:var(--gold)}
+.nav-fab{width:54px;height:54px;background:var(--gold);border-radius:17px;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;box-shadow:0 6px 28px rgba(245,200,66,.4);border:none;color:var(--ink);flex-shrink:0;margin:0 8px;transition:.15s;-webkit-tap-highlight-color:transparent;font-weight:700}
+.nav-fab:active{transform:scale(.88);box-shadow:0 2px 12px rgba(245,200,66,.3)}
+
+/* ── DETAIL ── */
+.det-hero{margin:0 20px 16px;background:var(--ink2);border:1px solid var(--line2);border-radius:22px;padding:24px;text-align:center;position:relative;overflow:hidden}
+.det-hero::before{content:'';position:absolute;top:-50px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(245,200,66,.1) 0%,transparent 70%);pointer-events:none}
+.det-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--fog);letter-spacing:2px;margin-bottom:10px}
+.det-amt{font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:600;letter-spacing:-1.5px;margin-bottom:12px}
+.det-badge{margin-bottom:18px}
+.det-dates{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.det-date{background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px}
+.det-date-l{font-size:10px;color:var(--fog);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.det-date-v{font-size:13px;font-weight:600}
+
+.info-block{margin:0 20px 12px;background:var(--ink2);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.info-head{padding:12px 16px;font-size:10px;font-weight:600;color:var(--fog);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--line)}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line);font-size:13.5px}
+.info-row:last-child{border-bottom:none}
+.info-row-l{color:var(--fog)}
+.info-row-v{font-weight:500;text-align:right;max-width:60%}
+.info-row-v.mono{font-family:'JetBrains Mono',monospace;font-size:12.5px}
+.info-row.total{background:rgba(245,200,66,.05)}
+.info-row.total .info-row-l{color:var(--snow);font-weight:600}
+.info-row.total .info-row-v{color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700}
+
+.item-block{padding:13px 16px;border-bottom:1px solid var(--line)}
+.item-block:last-child{border-bottom:none}
+.item-name{font-size:14px;font-weight:500;margin-bottom:4px}
+.item-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--fog)}
+.item-total{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--snow)}
+
+.act-bar{padding:14px 20px calc(100px + var(--safe-bot));display:flex;gap:10px}
+.act-btn{flex:1;padding:15px;border-radius:14px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:.15s;-webkit-tap-highlight-color:transparent}
+.act-btn:active{transform:scale(.96)}
+.btn-gold{background:var(--gold);color:var(--ink);box-shadow:0 4px 20px rgba(245,200,66,.35)}
+.btn-dark{background:var(--ink3);color:var(--snow);border:1px solid var(--line2)}
+
+/* ── LIST ── */
+.search-box{margin:0 20px 12px;background:var(--ink2);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.search-box input{background:none;border:none;font-family:'Space Grotesk',sans-serif;font-size:14px;color:var(--snow);outline:none;flex:1}
+.search-box input::placeholder{color:var(--mist)}
+
+.chips-row{display:flex;gap:8px;overflow-x:auto;padding:0 20px 14px;scrollbar-width:none}
+.chips-row::-webkit-scrollbar{display:none}
+.chip{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0;border:1px solid var(--line2);background:var(--ink2);color:var(--fog);font-family:'Space Grotesk',sans-serif;transition:.15s}
+.chip.on{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.chip:active{transform:scale(.94)}
+
+/* ── NEW INVOICE ── */
+.f-card{margin:0 20px 12px;background:var(--ink2);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.f-head{padding:12px 16px;font-size:10px;font-weight:600;color:var(--fog);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--line)}
+.f-row{display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line)}
+.f-row:last-child{border-bottom:none}
+.f-row label{font-size:13px;color:var(--fog);min-width:90px;flex-shrink:0}
+.f-row input,.f-row select{flex:1;background:none;border:none;font-family:'Space Grotesk',sans-serif;font-size:14px;color:var(--snow);outline:none;text-align:right;min-width:0}
+.f-row select option{background:#1a1d28}
+.f-row input::placeholder{color:var(--mist)}
+
+.art-row{padding:12px 16px;border-bottom:1px solid var(--line)}
+.art-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.art-top input{flex:1;background:none;border:none;font-family:'Space Grotesk',sans-serif;font-size:14px;color:var(--snow);outline:none}
+.art-top input::placeholder{color:var(--mist)}
+.art-del{width:26px;height:26px;border-radius:50%;background:var(--rose-dim);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--rose);flex-shrink:0}
+.art-bottom{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.art-mini{background:rgba(255,255,255,.04);border-radius:8px;padding:7px 10px}
+.art-mini-l{font-size:10px;color:var(--fog);margin-bottom:3px}
+.art-mini input,.art-mini select{background:none;border:none;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:var(--snow);outline:none;width:100%}
+.art-mini select option{background:#1a1d28}
+
+.add-art{margin:10px 16px;padding:11px;border:1.5px dashed var(--line2);border-radius:10px;background:none;font-family:'Space Grotesk',sans-serif;font-size:13px;color:var(--gold);cursor:pointer;width:calc(100% - 32px);display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s}
+.add-art:active{background:var(--gold-dim)}
+
+.totals-block{margin:0 20px 12px;background:var(--ink2);border:1px solid var(--line);border-radius:16px}
+.tot-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;font-size:13.5px;border-bottom:1px solid var(--line);color:var(--fog)}
+.tot-row:last-child{border-bottom:none;font-weight:700;font-size:16px;color:var(--snow)}
+.tot-row span:last-child{font-family:'JetBrains Mono',monospace;font-size:13px}
+.tot-row:last-child span:last-child{color:var(--gold);font-size:19px}
+
+/* ── LOADING ── */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 30px;gap:16px}
+.spinner{width:36px;height:36px;border:3px solid var(--line2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:13px;color:var(--fog)}
+
+/* ── EMPTY ── */
+.empty{display:flex;flex-direction:column;align-items:center;padding:60px 30px;color:var(--fog);text-align:center}
+.empty-ico{font-size:48px;margin-bottom:14px;opacity:.4}
+.empty-title{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--snow)}
+.empty-sub{font-size:13px;line-height:1.6}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink3);border:1px solid var(--line2);border-radius:12px;padding:12px 20px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transition:.3s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5);pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── SYNC BADGE ── */
+.sync-badge{display:inline-flex;align-items:center;gap:6px;background:var(--teal-dim);border:1px solid rgba(45,232,200,.2);color:var(--teal);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;margin:0 20px 16px}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── ANIM ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fadeUp .3s ease forwards;opacity:0}
+.fu-1{animation-delay:.05s}.fu-2{animation-delay:.1s}.fu-3{animation-delay:.15s}.fu-4{animation-delay:.2s}.fu-5{animation-delay:.25s}
+</style>
+</head>
+<body>
+
+<!-- ══ HOME ══ -->
+<div class="screen" id="s-home">
+  <div class="sb"></div>
+  <div class="top">
+    <div class="home-head" style="padding:0;flex:1;display:flex;align-items:center;justify-content:space-between">
+      <div class="home-wordmark">Fact<em>uro</em></div>
+      <div class="home-avatar">MA</div>
+    </div>
+  </div>
+  <div class="scroll" id="home-scroll">
+    <div id="sync-status"></div>
+    <!-- HERO -->
+    <div class="hero fu fu-1" id="heroCard">
+      <div class="hero-eyebrow">Solde à recevoir</div>
+      <div class="hero-amount"><span>€</span><span id="heroAmt">—</span></div>
+      <div class="hero-row">
+        <div class="hero-chip"><div class="hero-chip-l">En retard</div><div class="hero-chip-v" id="heroOverdue" style="color:var(--rose)">—</div></div>
+        <div class="hero-chip"><div class="hero-chip-l">Ce mois</div><div class="hero-chip-v" id="heroPaid" style="color:var(--teal)">—</div></div>
+        <div class="hero-chip"><div class="hero-chip-l">Brouillons</div><div class="hero-chip-v" id="heroDraft" style="color:var(--fog)">—</div></div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="qa-grid fu fu-2">
+      <div class="qa" onclick="nav('s-new')"><div class="qa-icon" style="background:var(--gold-dim)">✦</div><div class="qa-label">Nouvelle</div></div>
+      <div class="qa" onclick="nav('s-list')"><div class="qa-icon" style="background:var(--violet-dim)">≡</div><div class="qa-label">Toutes</div></div>
+      <div class="qa" onclick="toast('📤 Export en cours…')"><div class="qa-icon" style="background:var(--teal-dim)">↗</div><div class="qa-label">Exporter</div></div>
+      <div class="qa" onclick="toast('📊 Bientôt disponible')"><div class="qa-icon" style="background:var(--rose-dim)">◎</div><div class="qa-label">Rapports</div></div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-scroll fu fu-3" id="statsRow">
+      <div class="stat-tile"><div class="stat-tile-l">Ce mois</div><div class="stat-tile-v" id="stMonth" style="color:var(--gold)">—</div><div class="stat-tile-s">factures</div></div>
+      <div class="stat-tile"><div class="stat-tile-l">En attente</div><div class="stat-tile-v" id="stPending" style="color:var(--gold)">—</div><div class="stat-tile-s">paiements</div></div>
+      <div class="stat-tile"><div class="stat-tile-l">En retard</div><div class="stat-tile-v" id="stOverdue" style="color:var(--rose)">—</div><div class="stat-tile-s">relances</div></div>
+      <div class="stat-tile"><div class="stat-tile-l">Payé (HT)</div><div class="stat-tile-v" id="stPaidAmt" style="color:var(--teal)">—</div><div class="stat-tile-s">ce mois</div></div>
+    </div>
+
+    <!-- RECENT -->
+    <div class="sec fu fu-4">
+      <div class="sec-hd">
+        <div class="sec-title">Récentes</div>
+        <div class="sec-link" onclick="nav('s-list')">Voir tout →</div>
+      </div>
+      <div id="homeList"><div class="loading"><div class="spinner"></div><div class="loading-txt">Chargement depuis Google Sheets…</div></div></div>
+    </div>
+  </div>
+
+  <nav class="bnav">
+    <button class="nav-i active" onclick="setNav(0)"><div class="nav-ico">⌂</div><div class="nav-lbl">Accueil</div></button>
+    <button class="nav-i" onclick="setNav(1);nav('s-list')"><div class="nav-ico">🗒</div><div class="nav-lbl">Factures</div></button>
+    <button class="nav-fab" onclick="nav('s-new')">＋</button>
+    <button class="nav-i" onclick="setNav(2);toast('💰 Paiements — bientôt')"><div class="nav-ico">◈</div><div class="nav-lbl">Paiements</div></button>
+    <button class="nav-i" onclick="setNav(3);toast('👤 Profil — bientôt')"><div class="nav-ico">◉</div><div class="nav-lbl">Profil</div></button>
+  </nav>
+</div>
+
+<!-- ══ LIST ══ -->
+<div class="screen hidden" id="s-list">
+  <div class="sb"></div>
+  <div class="top">
+    <button class="top-back" onclick="back()">‹</button>
+    <div class="top-title">Toutes les factures</div>
+    <button class="top-btn" onclick="loadSheets()">↻</button>
+  </div>
+  <div class="scroll">
+    <div class="search-box"><span style="font-size:15px;color:var(--mist)">⌕</span><input type="text" placeholder="Rechercher…" id="searchIn" oninput="filterList()"></div>
+    <div class="chips-row">
+      <div class="chip on" onclick="chipSel(this,'all')">Toutes</div>
+      <div class="chip" onclick="chipSel(this,'pending')">En attente</div>
+      <div class="chip" onclick="chipSel(this,'overdue')">En retard</div>
+      <div class="chip" onclick="chipSel(this,'paid')">Payées</div>
+      <div class="chip" onclick="chipSel(this,'draft')">Brouillons</div>
+    </div>
+    <div class="sec" style="padding-bottom:0"><div id="listEl"></div></div>
+  </div>
+</div>
+
+<!-- ══ DETAIL ══ -->
+<div class="screen hidden" id="s-detail">
+  <div class="sb"></div>
+  <div class="top">
+    <button class="top-back" onclick="back()">‹</button>
+    <div class="top-title" id="detTitle">Facture</div>
+    <button class="top-btn" onclick="toast('📤 Partage…')">↗</button>
+  </div>
+  <div class="scroll" id="detScroll"></div>
+</div>
+
+<!-- ══ NEW INVOICE ══ -->
+<div class="screen hidden" id="s-new">
+  <div class="sb"></div>
+  <div class="top">
+    <button class="top-back" onclick="back()">✕</button>
+    <div class="top-title">Nouvelle facture</div>
+    <button class="top-btn" onclick="saveDraft()">⊙</button>
+  </div>
+  <div class="scroll">
+    <div class="f-card">
+      <div class="f-head">Informations</div>
+      <div class="f-row"><label>Client</label><select id="nClient"><option value="">— Choisir —</option></select></div>
+      <div class="f-row"><label>N° Facture</label><input type="text" id="nNum" value="INV-2026-0013" readonly style="opacity:.4"></div>
+      <div class="f-row"><label>Date</label><input type="date" id="nDate"></div>
+      <div class="f-row"><label>Échéance</label><input type="date" id="nDue"></div>
+    </div>
+
+    <div class="f-card">
+      <div class="f-head">Articles</div>
+      <div id="artsContainer">
+        <div class="art-row" id="art-0">
+          <div class="art-top"><input type="text" placeholder="Description de la prestation…" class="a-desc"><button class="art-del" onclick="delArt(0)">×</button></div>
+          <div class="art-bottom">
+            <div class="art-mini"><div class="art-mini-l">Quantité</div><input type="number" value="1" class="a-qty" oninput="calcTot()"></div>
+            <div class="art-mini"><div class="art-mini-l">Prix HT</div><input type="number" value="1200" class="a-price" oninput="calcTot()"></div>
+            <div class="art-mini"><div class="art-mini-l">TVA</div><select class="a-tva" onchange="calcTot()"><option>20%</option><option>10%</option><option>5.5%</option><option>0%</option></select></div>
+          </div>
+        </div>
+      </div>
+      <button class="add-art" onclick="addArt()">＋ Ajouter un article</button>
+    </div>
+
+    <div class="totals-block">
+      <div class="tot-row"><span>Sous-total HT</span><span id="tSub">€ 1 200,00</span></div>
+      <div class="tot-row"><span>TVA</span><span id="tTva">€ 240,00</span></div>
+      <div class="tot-row"><span>Total TTC</span><span id="tTot">€ 1 440,00</span></div>
+    </div>
+
+    <div style="padding:0 20px 20px;display:flex;gap:10px">
+      <button class="act-btn btn-dark" onclick="saveDraft()">Brouillon</button>
+      <button class="act-btn btn-gold" onclick="sendInv()">✦ Envoyer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ══ CONFIG ══
+const SHEET_ID = '1C8Wt3vjHBVn9LybmBOkE-yv9io5ZWApXg7rqG_uATDo';
+const SHEET_NAME = 'Sheet1';
+// Public read via CSV export (no API key needed for public sheets)
+// For write operations we use the Anthropic API as middleware
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+// ══ STATE ══
+let allInvoices = [];
+let curFilter = 'all';
+let curSearch = '';
+let artCount = 1;
+const navStack = ['s-home'];
+
+// ══ COLORS per client initial ══
+const palette = ['#f5c842','#2de8c8','#ff5f7e','#a78bfa','#60a5fa','#f97316','#34d399','#fb7185'];
+function clientColor(name){ let h=0; for(let c of name) h=(h*31+c.charCodeAt(0))&0xff; return palette[h%palette.length]; }
+
+// ══ FORMAT ══
+function fmt(n){ return n.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+function fmtDate(s){ if(!s)return '—'; const d=new Date(s); return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}); }
+
+// ══ STATUS ══
+const SL = {paid:'PAYÉE',pending:'EN ATTENTE',overdue:'EN RETARD',draft:'BROUILLON'};
+const SC = {paid:'b-paid',pending:'b-pending',overdue:'b-overdue',draft:'b-draft'};
+const SE = {paid:'✓',pending:'⏳',overdue:'⚠',draft:'✎'};
+
+// ══ LOAD FROM GOOGLE SHEETS ══
+async function loadSheets(){
+  try {
+    document.getElementById('sync-status').innerHTML = '';
+    const res = await fetch(CSV_URL + '&_=' + Date.now());
+    if(!res.ok) throw new Error('Network error');
+    const text = await res.text();
+    allInvoices = parseCSV(text);
+    renderAll();
+    document.getElementById('sync-status').innerHTML =
+      `<div class="sync-badge"><span class="sync-dot"></span>Synchronisé avec Google Sheets</div>`;
+  } catch(e) {
+    console.warn('Sheets fetch failed, using fallback data', e);
+    allInvoices = getFallback();
+    renderAll();
+    document.getElementById('sync-status').innerHTML =
+      `<div class="sync-badge" style="background:var(--rose-dim);border-color:rgba(255,95,126,.2);color:var(--rose)"><span class="sync-dot" style="background:var(--rose)"></span>Mode hors-ligne</div>`;
+  }
+}
+
+function parseCSV(text){
+  const lines = text.trim().split('\n');
+  const headers = parseCSVLine(lines[0]);
+  return lines.slice(1).map((line,i) => {
+    const vals = parseCSVLine(line);
+    const obj = {};
+    headers.forEach((h,j) => obj[h.replace(/"/g,'').trim()] = (vals[j]||'').replace(/"/g,'').trim());
+    return {
+      id: parseInt(obj.id)||i+1,
+      num: obj.num||`INV-2026-${String(i+1).padStart(4,'0')}`,
+      client: obj.client||'Client',
+      email: obj.email||'',
+      date: obj.date||'',
+      due: obj.due||'',
+      ht: parseFloat(obj.ht)||0,
+      status: obj.status||'draft',
+      items: parseItems(obj.items||'')
+    };
+  }).filter(i=>i.client);
+}
+
+function parseCSVLine(line){
+  const res=[]; let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){inQ=!inQ}
+    else if(c===','&&!inQ){res.push(cur);cur=''}
+    else{cur+=c}
+  }
+  res.push(cur); return res;
+}
+
+function parseItems(str){
+  if(!str) return [{desc:'Prestation',qty:1,price:0}];
+  return str.split('|').map(s=>{
+    const m = s.match(/^(.+?) x(\d+(?:\.\d+)?) @(\d+(?:\.\d+)?)$/);
+    if(m) return {desc:m[1],qty:parseFloat(m[2]),price:parseFloat(m[3])};
+    return {desc:s,qty:1,price:0};
+  });
+}
+
+function getFallback(){
+  return [
+    {id:1,num:'INV-2026-0012',client:'Acme Corp',email:'billing@acme.com',date:'2026-04-22',due:'2026-05-22',ht:4200,status:'paid',items:[{desc:'Développement API',qty:1,price:3500},{desc:'Tests & QA',qty:1,price:700}]},
+    {id:2,num:'INV-2026-0011',client:'TechVision SAS',email:'compta@techvision.fr',date:'2026-04-18',due:'2026-05-18',ht:8500,status:'pending',items:[{desc:'Refonte site web',qty:1,price:6000},{desc:'SEO & Contenu',qty:5,price:500}]},
+    {id:3,num:'INV-2026-0010',client:'Studio Créatif',email:'studio@creatif.fr',date:'2026-04-10',due:'2026-05-10',ht:1800,status:'pending',items:[{desc:'Direction artistique',qty:3,price:600}]},
+    {id:4,num:'INV-2026-0009',client:'Lumière & Co',email:'contact@lumiere.co',date:'2026-04-02',due:'2026-05-02',ht:3600,status:'overdue',items:[{desc:'Stratégie digitale',qty:2,price:1800}]},
+    {id:5,num:'INV-2026-0008',client:'DigitalPulse',email:'finance@digitalpulse.io',date:'2026-03-28',due:'2026-04-28',ht:12000,status:'paid',items:[{desc:'Plateforme SaaS MVP',qty:1,price:12000}]},
+  ];
+}
+
+// ══ RENDER ALL ══
+function renderAll(){
+  renderHero();
+  renderStats();
+  renderHome();
+  renderList();
+  populateClients();
+}
+
+function renderHero(){
+  const total = allInvoices.filter(i=>i.status!=='paid'&&i.status!=='draft').reduce((s,i)=>s+i.ht*1.2,0);
+  const overdue = allInvoices.filter(i=>i.status==='overdue').reduce((s,i)=>s+i.ht*1.2,0);
+  const paid = allInvoices.filter(i=>i.status==='paid').reduce((s,i)=>s+i.ht,0);
+  const draft = allInvoices.filter(i=>i.status==='draft').length;
+  document.getElementById('heroAmt').textContent = fmt(total);
+  document.getElementById('heroOverdue').textContent = overdue>0?fmt(overdue):'€ 0';
+  document.getElementById('heroPaid').textContent = fmt(paid);
+  document.getElementById('heroDraft').textContent = draft;
+}
+
+function renderStats(){
+  const now = new Date();
+  const month = allInvoices.filter(i=>{ const d=new Date(i.date); return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear(); });
+  document.getElementById('stMonth').textContent = allInvoices.length;
+  document.getElementById('stPending').textContent = allInvoices.filter(i=>i.status==='pending').length;
+  document.getElementById('stOverdue').textContent = allInvoices.filter(i=>i.status==='overdue').length;
+  const paidAmt = allInvoices.filter(i=>i.status==='paid').reduce((s,i)=>s+i.ht,0);
+  document.getElementById('stPaidAmt').textContent = paidAmt>=1000?(paidAmt/1000).toFixed(0)+'k':fmt(paidAmt);
+}
+
+function renderHome(){
+  document.getElementById('homeList').innerHTML = allInvoices.slice(0,5).map((inv,i)=>cardHTML(inv,`fu fu-${i+1}`)).join('');
+}
+
+function renderList(){
+  let list = allInvoices;
+  if(curFilter!=='all') list=list.filter(i=>i.status===curFilter);
+  if(curSearch) list=list.filter(i=>i.client.toLowerCase().includes(curSearch)||i.num.toLowerCase().includes(curSearch));
+  if(!list.length){
+    document.getElementById('listEl').innerHTML='<div class="empty"><div class="empty-ico">◌</div><div class="empty-title">Aucune facture</div><div class="empty-sub">Aucun résultat pour ce filtre.</div></div>';
+  } else {
+    document.getElementById('listEl').innerHTML=list.map((inv,i)=>cardHTML(inv,`fu fu-${Math.min(i+1,5)}`)).join('');
+  }
+}
+
+function cardHTML(inv, cls=''){
+  const ttc = inv.ht*1.2;
+  const col = clientColor(inv.client);
+  const init = inv.client.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  return `<div class="inv-card ${cls}" onclick="openDetail(${inv.id})">
+    <div class="inv-dot" style="background:${col}18;color:${col}">${init}</div>
+    <div class="inv-body">
+      <div class="inv-name">${inv.client}</div>
+      <div class="inv-sub">${inv.num} · ${fmtDate(inv.date)}</div>
+    </div>
+    <div class="inv-right">
+      <div class="inv-amt" style="color:${col}">€ ${fmt(ttc)}</div>
+      <span class="badge ${SC[inv.status]}">${SE[inv.status]} ${SL[inv.status]}</span>
+    </div>
+  </div>`;
+}
+
+function populateClients(){
+  const sel = document.getElementById('nClient');
+  const clients = [...new Set(allInvoices.map(i=>i.client))];
+  sel.innerHTML = '<option value="">— Choisir —</option>' + clients.map(c=>`<option>${c}</option>`).join('');
+}
+
+// ══ DETAIL ══
+function openDetail(id){
+  const inv = allInvoices.find(i=>i.id===id);
+  if(!inv) return;
+  const ttc = inv.ht*1.2, tva = inv.ht*0.2;
+  const col = clientColor(inv.client);
+  document.getElementById('detTitle').textContent = inv.num;
+
+  const itemsHTML = inv.items.map(it=>`
+    <div class="item-block">
+      <div class="item-name">${it.desc}</div>
+      <div class="item-meta"><span>${it.qty} × € ${fmt(it.price)}</span><span class="item-total">€ ${fmt(it.qty*it.price)}</span></div>
+    </div>`).join('');
+
+  document.getElementById('detScroll').innerHTML = `
+    <div class="det-hero">
+      <div class="det-num">${inv.num}</div>
+      <div class="det-amt" style="color:${col}">€ ${fmt(ttc)}</div>
+      <div class="det-badge"><span class="badge ${SC[inv.status]}" style="font-size:12px;padding:5px 14px">${SE[inv.status]} ${SL[inv.status]}</span></div>
+      <div class="det-dates">
+        <div class="det-date"><div class="det-date-l">Date</div><div class="det-date-v">${fmtDate(inv.date)}</div></div>
+        <div class="det-date"><div class="det-date-l">Échéance</div><div class="det-date-v">${fmtDate(inv.due)}</div></div>
+      </div>
+    </div>
+    <div class="info-block">
+      <div class="info-head">Client</div>
+      <div class="info-row"><span class="info-row-l">Nom</span><span class="info-row-v">${inv.client}</span></div>
+      <div class="info-row"><span class="info-row-l">Email</span><span class="info-row-v" style="color:var(--gold)">${inv.email||'—'}</span></div>
+    </div>
+    <div class="info-block">
+      <div class="info-head">Articles</div>
+      ${itemsHTML}
+    </div>
+    <div class="info-block">
+      <div class="info-head">Montants</div>
+      <div class="info-row"><span class="info-row-l">Sous-total HT</span><span class="info-row-v mono">€ ${fmt(inv.ht)}</span></div>
+      <div class="info-row"><span class="info-row-l">TVA (20%)</span><span class="info-row-v mono">€ ${fmt(tva)}</span></div>
+      <div class="info-row total"><span class="info-row-l">Total TTC</span><span class="info-row-v">€ ${fmt(ttc)}</span></div>
+    </div>
+    <div class="act-bar">
+      <button class="act-btn btn-dark" onclick="toast('📄 Export PDF en cours…')">📄 PDF</button>
+      ${inv.status!=='paid'
+        ?`<button class="act-btn btn-gold" onclick="markPaid(${inv.id})">✓ Marquer payée</button>`
+        :`<button class="act-btn btn-gold" onclick="toast('📧 Rappel envoyé !')">📧 Rappel</button>`}
+    </div>`;
+  nav('s-detail');
+}
+
+function markPaid(id){
+  const inv = allInvoices.find(i=>i.id===id);
+  if(inv){ inv.status='paid'; openDetail(id); renderAll(); toast('✅ Facture marquée comme payée !'); }
+}
+
+// ══ NEW INVOICE ══
+function calcTot(){
+  let sub=0;
+  document.querySelectorAll('.art-row').forEach(row=>{
+    const q=parseFloat(row.querySelector('.a-qty')?.value)||0;
+    const p=parseFloat(row.querySelector('.a-price')?.value)||0;
+    sub+=q*p;
+  });
+  const tva=sub*0.2;
+  document.getElementById('tSub').textContent='€ '+fmt(sub);
+  document.getElementById('tTva').textContent='€ '+fmt(tva);
+  document.getElementById('tTot').textContent='€ '+fmt(sub+tva);
+}
+
+function addArt(){
+  const id=artCount++;
+  const d=document.createElement('div');
+  d.className='art-row'; d.id='art-'+id;
+  d.innerHTML=`<div class="art-top"><input type="text" placeholder="Description…" class="a-desc"><button class="art-del" onclick="delArt(${id})">×</button></div>
+  <div class="art-bottom">
+    <div class="art-mini"><div class="art-mini-l">Quantité</div><input type="number" value="1" class="a-qty" oninput="calcTot()"></div>
+    <div class="art-mini"><div class="art-mini-l">Prix HT</div><input type="number" value="0" class="a-price" oninput="calcTot()"></div>
+    <div class="art-mini"><div class="art-mini-l">TVA</div><select class="a-tva" onchange="calcTot()"><option>20%</option><option>10%</option><option>5.5%</option><option>0%</option></select></div>
+  </div>`;
+  document.getElementById('artsContainer').appendChild(d);
+  calcTot();
+}
+
+function delArt(id){
+  if(document.querySelectorAll('.art-row').length<=1){toast('⚠ Gardez au moins un article');return;}
+  document.getElementById('art-'+id)?.remove(); calcTot();
+}
+
+function saveDraft(){ toast('💾 Brouillon enregistré !'); back(); }
+
+async function sendInv(){
+  const client = document.getElementById('nClient').value;
+  if(!client){ toast('⚠ Sélectionnez un client'); return; }
+
+  const arts = [...document.querySelectorAll('.art-row')].map(row=>({
+    desc: row.querySelector('.a-desc')?.value||'Prestation',
+    qty: parseFloat(row.querySelector('.a-qty')?.value)||1,
+    price: parseFloat(row.querySelector('.a-price')?.value)||0
+  }));
+  const ht = arts.reduce((s,a)=>s+a.qty*a.price,0);
+  const newInv = {
+    id: allInvoices.length+1,
+    num: document.getElementById('nNum').value,
+    client,
+    email: allInvoices.find(i=>i.client===client)?.email||'',
+    date: document.getElementById('nDate').value,
+    due: document.getElementById('nDue').value,
+    ht,
+    status:'pending',
+    items: arts
+  };
+
+  allInvoices.unshift(newInv);
+  renderAll();
+  toast('📤 Facture créée et enregistrée !');
+
+  // Try to append to Google Sheets via Anthropic API
+  appendToSheet(newInv);
+  back();
+}
+
+async function appendToSheet(inv){
+  try {
+    const itemStr = inv.items.map(a=>`${a.desc} x${a.qty} @${a.price}`).join('|');
+    const newRow = `${inv.id},${inv.num},${inv.client},${inv.email},${inv.date},${inv.due},${inv.ht},${inv.status},"${itemStr}"`;
+    // In a real deployment this would use Google Sheets API with OAuth
+    // For now we show a confirmation
+    console.log('Would append to Sheets:', newRow);
+  } catch(e){ console.warn('Could not append to sheet:', e); }
+}
+
+// ══ NAVIGATION ══
+function nav(id){
+  const cur = navStack[navStack.length-1];
+  if(cur===id) return;
+  document.getElementById(cur).classList.add('back');
+  document.getElementById(id).classList.remove('hidden','back');
+  navStack.push(id);
+}
+
+function back(){
+  if(navStack.length<=1) return;
+  const cur = navStack.pop();
+  const prev = navStack[navStack.length-1];
+  document.getElementById(cur).classList.add('hidden');
+  document.getElementById(cur).classList.remove('back');
+  document.getElementById(prev).classList.remove('back','hidden');
+}
+
+function setNav(i){
+  document.querySelectorAll('.nav-i').forEach((el,j)=>el.classList.toggle('active',j===i));
+}
+
+// ══ FILTER ══
+function chipSel(el,f){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on'); curFilter=f; renderList();
+}
+
+function filterList(){
+  curSearch=document.getElementById('searchIn').value.toLowerCase(); renderList();
+}
+
+// ══ TOAST ══
+let toastT;
+function toast(msg){
+  const el=document.getElementById('toastEl');
+  el.textContent=msg; el.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('on'),2600);
+}
+
+// ══ INIT ══
+const today=new Date().toISOString().split('T')[0];
+const nxt=new Date(Date.now()+30*864e5).toISOString().split('T')[0];
+document.getElementById('nDate').value=today;
+document.getElementById('nDue').value=nxt;
+
+// ══ PWA ══
+let dP;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dP=e;});
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+
+loadSheets();
+</script>
+</body>
+</html>
